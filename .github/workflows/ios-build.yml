@@ -3,10 +3,10 @@ name: Build and Export iOS App
 on:
   push:
     branches:
-      - main  # Trigger build on push to the main branch
+      - master  # Trigger build on push to the main branch
   pull_request:
     branches:
-      - main  # Trigger build on pull request to the main branch
+      - master  # Trigger build on pull request to the main branch
 
 jobs:
   build:
