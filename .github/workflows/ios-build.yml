@@ -1,4 +1,4 @@
-name: Build and Export iOS App
+name: Build and Export Unsigned iOS App
 
 on:
   push:
@@ -26,22 +26,24 @@ jobs:
         npm install  # Install npm dependencies
         cd ios && pod install  # Install iOS dependencies using CocoaPods
 
-    - name: Build iOS App (Release)
+    - name: Build iOS App (Release) Without Code Signing
       run: |
         xcodebuild clean archive \
           -project ios/MyReactNativeApp.xcodeproj \
           -scheme MyReactNativeApp \
           -sdk iphoneos \
           -configuration Release \
-          -archivePath build/MyReactNativeApp.xcarchive
+          -archivePath build/MyReactNativeApp.xcarchive \
+          CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
 
-    - name: Export .ipa
+    - name: Export .ipa Without Signing
       run: |
-        # Export the .ipa file
+        # Export the .ipa file without signing
         xcodebuild -exportArchive \
           -archivePath build/MyReactNativeApp.xcarchive \
+          -exportPath build \
           -exportOptionsPlist ios/exportOptions.plist \
-          -exportPath build
+          CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
 
         # List build files for debugging
         ls -lh build
@@ -49,5 +51,5 @@ jobs:
     - name: Upload .ipa as artifact
       uses: actions/upload-artifact@main
       with:
-        name: ios-app
+        name: ios-unsigned-app
         path: build/*.ipa  # Upload generated .ipa file
