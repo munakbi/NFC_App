@@ -21,13 +21,15 @@ jobs:
       with:
         node-version: '18'  # Set Node.js version for React Native
 
-    - name: Install dependencies
+    - name: Install Dependencies & Clean Cache
       run: |
         npm install  # Install npm dependencies
-        cd ios 
-        pod deintegrate  # Ensure old dependencies are removed
-        rm -rf Pods Podfile.lock  # Delete previous CocoaPods cache
-        pod install --verbose  # Reinstall dependencies
+        npx react-native link  # Ensure libraries are linked
+        rm -rf ~/Library/Developer/Xcode/DerivedData  # Clean Xcode cache
+        cd ios
+        pod deintegrate  # Remove old dependencies
+        rm -rf Pods Podfile.lock  # Delete CocoaPods cache
+        pod install --repo-update --verbose  # Reinstall dependencies
 
     - name: Build iOS App (Release) Without Code Signing
       run: |
@@ -41,14 +43,13 @@ jobs:
 
     - name: Export .ipa Without Signing
       run: |
-        # Export the .ipa file without signing
         xcodebuild -exportArchive \
           -archivePath build/MyReactNativeApp.xcarchive \
           -exportPath build \
           -exportOptionsPlist ios/exportOptions.plist \
           CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
-
-        # List build files for debugging
+        
+        # Debug: List build files
         ls -lh build
 
     - name: Upload .ipa as artifact
