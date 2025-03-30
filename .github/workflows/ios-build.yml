@@ -29,8 +29,8 @@ jobs:
     - name: Build iOS App (Release)
       run: |
         xcodebuild clean archive \
-          -project ios/MyReactNativeApp.xcodeproj \  # Use .xcodeproj instead of .xcworkspace
-          -scheme MyReactNativeApp \  # Use the correct scheme name
+          -project ios/MyReactNativeApp.xcodeproj \
+          -scheme MyReactNativeApp \
           -sdk iphoneos \
           -configuration Release \
           -archivePath build/MyReactNativeApp.xcarchive
