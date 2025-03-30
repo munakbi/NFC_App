@@ -3,33 +3,32 @@ name: Build and Export Unsigned iOS App
 on:
   push:
     branches:
-      - master  # Trigger build on push to master branch
+      - master
   pull_request:
     branches:
-      - master  # Trigger build on pull request to master branch
+      - master
 
 jobs:
   build:
-    runs-on: macos-latest  # Use macOS runner for iOS build
+    runs-on: macos-latest
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2  # Fetch repository code
+      uses: actions/checkout@v2
 
     - name: Set up Node.js
       uses: actions/setup-node@v2
       with:
-        node-version: '18'  # Set Node.js version for React Native
+        node-version: '18'
 
     - name: Install Dependencies & Clean Cache
       run: |
-        npm install  # Install npm dependencies
-        npx react-native link  # Ensure libraries are linked
+        npm install
         rm -rf ~/Library/Developer/Xcode/DerivedData  # Clean Xcode cache
         cd ios
-        pod deintegrate  # Remove old dependencies
-        rm -rf Pods Podfile.lock  # Delete CocoaPods cache
-        pod install --repo-update --verbose  # Reinstall dependencies
+        pod deintegrate
+        rm -rf Pods Podfile.lock
+        pod install --repo-update --verbose  # Ensure dependencies are fresh
 
     - name: Build iOS App (Release) Without Code Signing
       run: |
@@ -56,4 +55,4 @@ jobs:
       uses: actions/upload-artifact@main
       with:
         name: ios-unsigned-app
-        path: build/*.ipa  # Upload generated .ipa file
+        path: build/*.ipa
