@@ -24,7 +24,10 @@ jobs:
     - name: Install dependencies
       run: |
         npm install  # Install npm dependencies
-        cd ios && pod install  # Install iOS dependencies using CocoaPods
+        cd ios 
+        pod deintegrate  # Ensure old dependencies are removed
+        rm -rf Pods Podfile.lock  # Delete previous CocoaPods cache
+        pod install --verbose  # Reinstall dependencies
 
     - name: Build iOS App (Release) Without Code Signing
       run: |
