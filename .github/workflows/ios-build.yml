@@ -3,10 +3,10 @@ name: Build and Export iOS App
 on:
   push:
     branches:
-      - master  # Trigger build on push to the main branch
+      - master  # Trigger build on push to master branch
   pull_request:
     branches:
-      - master  # Trigger build on pull request to the main branch
+      - master  # Trigger build on pull request to master branch
 
 jobs:
   build:
@@ -14,7 +14,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2  # Checkout the code from the repository
+      uses: actions/checkout@v2  # Fetch repository code
 
     - name: Set up Node.js
       uses: actions/setup-node@v2
@@ -24,25 +24,30 @@ jobs:
     - name: Install dependencies
       run: |
         npm install  # Install npm dependencies
-        cd ios && pod install && cd ..  # Install iOS dependencies using CocoaPods
+        cd ios && pod install  # Install iOS dependencies using CocoaPods
 
     - name: Build iOS App (Release)
       run: |
-        npx react-native run-ios --configuration Release  # Build iOS app in Release mode
+        xcodebuild clean archive \
+          -project ios/MyReactNativeApp.xcodeproj \  # Use .xcodeproj instead of .xcworkspace
+          -scheme MyReactNativeApp \  # Use the correct scheme name
+          -sdk iphoneos \
+          -configuration Release \
+          -archivePath build/MyReactNativeApp.xcarchive
 
     - name: Export .ipa
       run: |
-        # Archive the iOS app
-        xcodebuild -workspace ios/YourProject.xcworkspace -scheme YourApp -configuration Release -archivePath build/YourApp.xcarchive archive
-        
         # Export the .ipa file
-        xcodebuild -exportArchive -archivePath build/YourApp.xcarchive -exportOptionsPlist ios/exportOptions.plist -exportPath build
-        
-        # List the files in the build directory to confirm .ipa creation
-        ls build
+        xcodebuild -exportArchive \
+          -archivePath build/MyReactNativeApp.xcarchive \
+          -exportOptionsPlist ios/exportOptions.plist \
+          -exportPath build
+
+        # List build files for debugging
+        ls -lh build
 
     - name: Upload .ipa as artifact
       uses: actions/upload-artifact@main
       with:
-        name: ios-app  # Name the artifact
-        path: build/*.ipa  # Path to the .ipa file
+        name: ios-app
+        path: build/*.ipa  # Upload generated .ipa file
