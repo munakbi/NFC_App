@@ -1,0 +1,48 @@
+name: Build and Export iOS App
+
+on:
+  push:
+    branches:
+      - main  # Trigger build on push to the main branch
+  pull_request:
+    branches:
+      - main  # Trigger build on pull request to the main branch
+
+jobs:
+  build:
+    runs-on: macos-latest  # Use macOS runner for iOS build
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2  # Checkout the code from the repository
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'  # Set Node.js version for React Native
+
+    - name: Install dependencies
+      run: |
+        npm install  # Install npm dependencies
+        cd ios && pod install && cd ..  # Install iOS dependencies using CocoaPods
+
+    - name: Build iOS App (Release)
+      run: |
+        npx react-native run-ios --configuration Release  # Build iOS app in Release mode
+
+    - name: Export .ipa
+      run: |
+        # Archive the iOS app
+        xcodebuild -workspace ios/YourProject.xcworkspace -scheme YourApp -configuration Release -archivePath build/YourApp.xcarchive archive
+        
+        # Export the .ipa file
+        xcodebuild -exportArchive -archivePath build/YourApp.xcarchive -exportOptionsPlist ios/exportOptions.plist -exportPath build
+        
+        # List the files in the build directory to confirm .ipa creation
+        ls build
+
+    - name: Upload .ipa as artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: ios-app  # Name the artifact
+        path: build/*.ipa  # Path to the .ipa file
