@@ -1,58 +1,46 @@
-name: Build and Export Unsigned iOS App
+name: "Build Android app"
 
 on:
   push:
-    branches:
-      - master
-  pull_request:
     branches:
       - master
 
 jobs:
   build:
     runs-on: macos-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '18'
+      - name: Install Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: 17
+          distribution: adopt
+          cache: gradle
 
-    - name: Install Dependencies & Clean Cache
-      run: |
-        npm install
-        rm -rf ~/Library/Developer/Xcode/DerivedData  # Clean Xcode cache
-        cd ios
-        pod deintegrate
-        rm -rf Pods Podfile.lock
-        pod install --repo-update --verbose  # Ensure dependencies are fresh
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@v1
 
-    - name: Build iOS App (Release) Without Code Signing
-      run: |
-        xcodebuild clean archive \
-          -project ios/MyReactNativeApp.xcodeproj \
-          -scheme MyReactNativeApp \
-          -sdk iphoneos \
-          -configuration Release \
-          -archivePath build/MyReactNativeApp.xcarchive \
-          CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
+      - name: Setup Node  
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'yarn'
 
-    - name: Export .ipa Without Signing
-      run: |
-        xcodebuild -exportArchive \
-          -archivePath build/MyReactNativeApp.xcarchive \
-          -exportPath build \
-          -exportOptionsPlist ios/exportOptions.plist \
-          CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
-        
-        # Debug: List build files
-        ls -lh build
+      - name: Run Yarn Install
+        run: |
+             npm i -g corepack
+             yarn install
 
-    - name: Upload .ipa as artifact
-      uses: actions/upload-artifact@main
-      with:
-        name: ios-unsigned-app
-        path: build/*.ipa
+      - name: Build application
+        run: |
+             cd android
+             ./gradlew assembleRelease
+
+      - name: Upload application
+        uses: actions/upload-artifact@v2
+        with:
+          name: app
+          path: android/app/build/outputs/apk/release/app-release.apk
+          retention-days: 3
